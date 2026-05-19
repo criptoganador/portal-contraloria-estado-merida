@@ -1,65 +1,28 @@
 import { useState, useRef } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Image, Search } from 'lucide-react';
-
-interface NoticiaAdmin {
-  id: number;
-  titulo: string;
-  categoria: string;
-  fecha: string;
-  contenido: string;
-  imagen: string;
-  publicada: boolean;
-}
-
-const noticiasIniciales: NoticiaAdmin[] = [
-  {
-    id: 1,
-    titulo: 'Contraloría inicia auditoría a la gestión fiscal del ejercicio 2025',
-    categoria: 'Auditoría',
-    fecha: '2026-05-15',
-    contenido: 'El órgano contralor dio inicio a las actuaciones de control fiscal correspondientes al ejercicio económico financiero 2025.',
-    imagen: 'auditoria-2025.jpg',
-    publicada: true,
-  },
-  {
-    id: 2,
-    titulo: 'Jornada de capacitación sobre rendición de cuentas para funcionarios públicos',
-    categoria: 'Formación',
-    fecha: '2026-05-10',
-    contenido: 'Se llevó a cabo una jornada de formación dirigida a los responsables de la administración activa.',
-    imagen: 'capacitacion.jpg',
-    publicada: true,
-  },
-  {
-    id: 3,
-    titulo: 'Publicada la Resolución de Normas para la Declaración Jurada de Patrimonio',
-    categoria: 'Normativa',
-    fecha: '2026-05-05',
-    contenido: 'La Contraloría del Estado Mérida publica las normas actualizadas que regulan la presentación de la Declaración Jurada.',
-    imagen: 'resolucion.jpg',
-    publicada: true,
-  },
-];
+import { Plus, Pencil, Trash2, X, Save, Image as ImageIcon, Search } from 'lucide-react';
+import { useNoticias } from '../context/NoticiasContext';
+import type { Noticia } from '../context/NoticiasContext';
 
 const categorias = ['Auditoría', 'Formación', 'Normativa', 'Institucional', 'Participación'];
 
-const formularioVacio: Omit<NoticiaAdmin, 'id'> = {
+const formularioVacio: Omit<Noticia, 'id'> = {
   titulo: '',
   categoria: 'Auditoría',
   fecha: new Date().toISOString().split('T')[0],
   contenido: '',
   imagen: '',
   publicada: true,
+  resumen: '',
 };
 
 export default function AdminNoticias() {
-  const [noticias, setNoticias] = useState<NoticiaAdmin[]>(noticiasIniciales);
+  const { noticias, agregarNoticia, editarNoticia, eliminarNoticia } = useNoticias();
   const [mostrarForm, setMostrarForm] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [form, setForm] = useState(formularioVacio);
   const [busqueda, setBusqueda] = useState('');
   const [mensaje, setMensaje] = useState('');
-  const nextId = useRef(100);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const noticiasFiltradas = noticias.filter((n) =>
     n.titulo.toLowerCase().includes(busqueda.toLowerCase())
@@ -71,7 +34,7 @@ export default function AdminNoticias() {
     setMostrarForm(true);
   };
 
-  const abrirEditar = (noticia: NoticiaAdmin) => {
+  const abrirEditar = (noticia: Noticia) => {
     setForm({
       titulo: noticia.titulo,
       categoria: noticia.categoria,
@@ -79,6 +42,7 @@ export default function AdminNoticias() {
       contenido: noticia.contenido,
       imagen: noticia.imagen,
       publicada: noticia.publicada,
+      resumen: noticia.resumen || '',
     });
     setEditandoId(noticia.id);
     setMostrarForm(true);
@@ -86,18 +50,18 @@ export default function AdminNoticias() {
 
   const guardar = () => {
     if (!form.titulo.trim() || !form.contenido.trim()) return;
+    
+    // Auto-generar resumen si no existe
+    const dataAguardar = { ...form };
+    if (!dataAguardar.resumen) {
+      dataAguardar.resumen = dataAguardar.contenido.substring(0, 150) + '...';
+    }
 
     if (editandoId !== null) {
-      setNoticias((prev) =>
-        prev.map((n) => (n.id === editandoId ? { ...n, ...form } : n))
-      );
+      editarNoticia(editandoId, dataAguardar);
       mostrarMensaje('Noticia actualizada exitosamente');
     } else {
-      const nueva: NoticiaAdmin = {
-        id: nextId.current++,
-        ...form,
-      };
-      setNoticias((prev) => [nueva, ...prev]);
+      agregarNoticia(dataAguardar);
       mostrarMensaje('Noticia creada exitosamente');
     }
     setMostrarForm(false);
@@ -106,7 +70,7 @@ export default function AdminNoticias() {
   };
 
   const eliminar = (id: number) => {
-    setNoticias((prev) => prev.filter((n) => n.id !== id));
+    eliminarNoticia(id);
     mostrarMensaje('Noticia eliminada');
   };
 
@@ -117,6 +81,17 @@ export default function AdminNoticias() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm((prev) => ({ ...prev, imagen: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -228,15 +203,47 @@ export default function AdminNoticias() {
             </div>
 
             <div>
+              <label htmlFor="resumen" className="block text-sm font-medium text-gray-700 mb-1.5">
+                Resumen Corto (Opcional)
+              </label>
+              <textarea
+                id="resumen"
+                name="resumen"
+                value={form.resumen}
+                onChange={handleChange}
+                rows={2}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                placeholder="Breve descripción para las tarjetas (se auto-genera si se deja vacío)..."
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Imagen de Portada
               </label>
-              <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-blue-300 transition-colors cursor-pointer">
-                <Image className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">
-                  Haz clic para seleccionar una imagen
-                </p>
-                <p className="text-xs text-gray-400 mt-1">JPG, PNG — Máx. 2MB</p>
+              <div 
+                className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-blue-300 transition-colors cursor-pointer relative overflow-hidden"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {form.imagen && form.imagen.startsWith('data:') ? (
+                  <img src={form.imagen} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                ) : null}
+                
+                <div className="relative z-10">
+                  <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2 drop-shadow-md" />
+                  <p className="text-sm text-gray-600 font-medium">
+                    {form.imagen ? 'Haz clic para cambiar la imagen' : 'Haz clic para seleccionar una imagen'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">JPG, PNG — Máx. 2MB</p>
+                </div>
+                
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                />
               </div>
             </div>
 

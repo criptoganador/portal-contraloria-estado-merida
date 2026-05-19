@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import {
   LayoutDashboard, FileText, FilePlus, UserCheck, LogOut,
-  Menu, X, ChevronRight, Shield,
+  Menu, ChevronRight, Shield, Settings,
 } from 'lucide-react';
 import AdminDashboard from './AdminDashboard';
 import AdminNoticias from './AdminNoticias';
 import AdminDocumentos from './AdminDocumentos';
 import AdminContralor from './AdminContralor';
+import AdminConfiguracion from './AdminConfiguracion';
 
-type AdminView = 'dashboard' | 'noticias' | 'documentos' | 'contralor';
+type AdminView = 'dashboard' | 'noticias' | 'documentos' | 'contralor' | 'configuracion';
 
 interface SidebarLink {
   id: AdminView;
@@ -21,6 +22,7 @@ const sidebarLinks: SidebarLink[] = [
   { id: 'noticias', label: 'Gestión de Noticias', icon: FileText },
   { id: 'documentos', label: 'Repositorio Legal', icon: FilePlus },
   { id: 'contralor', label: 'Perfil del Contralor', icon: UserCheck },
+  { id: 'configuracion', label: 'Configuración del Sitio', icon: Settings },
 ];
 
 export default function AdminLayout() {
@@ -37,6 +39,8 @@ export default function AdminLayout() {
         return <AdminDocumentos />;
       case 'contralor':
         return <AdminContralor />;
+      case 'configuracion':
+        return <AdminConfiguracion />;
     }
   };
 

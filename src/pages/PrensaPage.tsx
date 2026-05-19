@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom';
 import { FileText, ArrowRight } from 'lucide-react';
-import { noticias } from '../data/mockData';
+import { useNoticias } from '../context/NoticiasContext';
 
 export default function PrensaPage() {
+  const { noticias } = useNoticias();
+  const publicadas = noticias.filter(n => n.publicada);
   return (
     <>
       <section className="bg-gradient-to-r from-blue-950 to-blue-800 py-14 md:py-20">
@@ -18,17 +19,21 @@ export default function PrensaPage() {
       <section className="bg-gray-50 py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {noticias.map((noticia) => (
+            {publicadas.map((noticia) => (
               <article
                 key={noticia.id}
                 className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100 flex flex-col"
               >
-                <div className="relative h-48 bg-gradient-to-br from-blue-900 to-blue-700 flex items-center justify-center">
-                  <div className="text-center text-white/60">
-                    <FileText className="w-10 h-10 mx-auto mb-2" />
-                    <span className="text-xs">Imagen de noticia</span>
-                  </div>
-                  <span className="absolute top-3 left-3 bg-amber-500 text-blue-950 text-xs font-semibold px-2.5 py-1 rounded-md">
+                <div className="relative h-48 bg-blue-900 flex items-center justify-center overflow-hidden">
+                  {noticia.imagen && noticia.imagen !== 'auditoria-2025.jpg' && noticia.imagen !== 'capacitacion.jpg' && noticia.imagen !== 'resolucion.jpg' ? (
+                    <img src={noticia.imagen} alt={noticia.titulo} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-center text-white/60">
+                      <FileText className="w-10 h-10 mx-auto mb-2" />
+                      <span className="text-xs">Imagen de noticia</span>
+                    </div>
+                  )}
+                  <span className="absolute top-3 left-3 bg-amber-500 text-blue-950 text-xs font-semibold px-2.5 py-1 rounded-md z-10">
                     {noticia.categoria}
                   </span>
                 </div>
@@ -54,6 +59,12 @@ export default function PrensaPage() {
               </article>
             ))}
           </div>
+          {publicadas.length === 0 && (
+            <div className="text-center py-20 text-gray-500">
+              <FileText className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+              <p className="text-lg">No hay noticias publicadas en este momento.</p>
+            </div>
+          )}
         </div>
       </section>
     </>

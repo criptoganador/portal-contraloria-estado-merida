@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Send, MapPin, Phone, Mail, Clock, CheckCircle } from 'lucide-react';
+import { useSiteConfig } from '../context/SiteConfigContext';
 import type { ContactFormData } from '../types';
 
 export default function ContactoPage() {
+  const { config } = useSiteConfig();
   const [form, setForm] = useState<ContactFormData>({
     nombre: '',
     cedula: '',
@@ -130,23 +132,23 @@ export default function ContactoPage() {
                 <ul className="space-y-4 text-sm text-gray-600">
                   <li className="flex items-start gap-3">
                     <MapPin className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
-                    <span>Av. 3 Independencia, Edificio Contraloría del Estado, Mérida, Estado Mérida, Venezuela</span>
+                    <span>{config.contactoDireccion}</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Phone className="w-5 h-5 text-amber-500 shrink-0" />
-                    <span>(0274) 252-5555 / 252-6666</span>
+                    <span>{config.contactoTelefono}</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-amber-500 shrink-0" />
-                    <span>contacto@contraloriaestadomerida.gob.ve</span>
+                    <span>{config.contactoEmail}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Clock className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
                     <div>
                       <p className="font-medium text-gray-800">Horario de Atención</p>
-                      <p>Lunes a Viernes</p>
-                      <p>8:00 AM – 12:00 PM</p>
-                      <p>1:00 PM – 4:00 PM</p>
+                      {config.contactoHorario.split('\n').map((line, i) => (
+                        <p key={i}>{line}</p>
+                      ))}
                     </div>
                   </li>
                 </ul>
@@ -157,7 +159,7 @@ export default function ContactoPage() {
                 <p className="text-blue-200 text-sm mb-4">
                   Para denuncias urgentes sobre irregularidades administrativas, comunícate directamente con nuestra línea de atención.
                 </p>
-                <p className="text-amber-400 font-bold text-lg">(0274) 252-5555</p>
+                <p className="text-amber-400 font-bold text-lg">{config.contactoTelefono.split('/')[0].trim()}</p>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { navLinks } from '../../data/mockData';
+import { useSiteConfig } from '../../context/SiteConfigContext';
 
 const SocialIcon = ({ d, label }: { d: string; label: string }) => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-label={label}>
@@ -16,6 +17,8 @@ const socialLinks = [
 ];
 
 export default function Footer() {
+  const { config } = useSiteConfig();
+
   return (
     <footer className="bg-gray-900 text-gray-300">
       {/* Main footer */}
@@ -24,16 +27,20 @@ export default function Footer() {
           {/* About */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center">
-                <svg viewBox="0 0 48 48" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="24" cy="24" r="22" fill="#1e3a5f" />
-                  <path d="M24 8L14 18v12l10 10 10-10V18L24 8z" fill="#c9a84c" stroke="#fff" strokeWidth="0.5" />
-                  <text x="24" y="28" textAnchor="middle" fill="#fff" fontSize="8" fontWeight="bold" fontFamily="serif">CEM</text>
-                </svg>
+              <div className="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center p-1 overflow-hidden">
+                {config.logoBase64 ? (
+                  <img src={config.logoBase64} alt="Logo" className="w-full h-full object-contain" />
+                ) : (
+                  <svg viewBox="0 0 48 48" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="24" cy="24" r="22" fill="#1e3a5f" />
+                    <path d="M24 8L14 18v12l10 10 10-10V18L24 8z" fill="#c9a84c" stroke="#fff" strokeWidth="0.5" />
+                    <text x="24" y="28" textAnchor="middle" fill="#fff" fontSize="8" fontWeight="bold" fontFamily="serif">CEM</text>
+                  </svg>
+                )}
               </div>
               <div>
-                <p className="text-white font-bold text-sm">Contraloría del</p>
-                <p className="text-gray-400 text-xs">Estado Mérida</p>
+                <p className="text-white font-bold text-sm">{config.titulo}</p>
+                <p className="text-gray-400 text-xs">{config.subtitulo}</p>
               </div>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
@@ -47,20 +54,20 @@ export default function Footer() {
               <div className="w-1 h-5 bg-amber-500 rounded-full" />
               Contacto
             </h3>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                <span>Av. 3 Independencia, Edificio Contraloría del Estado, Mérida, Estado Mérida, Venezuela</span>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3 text-sm text-blue-200">
+                <MapPin className="w-5 h-5 shrink-0 text-amber-400" />
+                <span>{config.contactoDireccion}</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-amber-500 shrink-0" />
-                <span>(0274) 252-5555 / 252-6666</span>
+              <li className="flex items-center gap-3 text-sm text-blue-200">
+                <Phone className="w-5 h-5 shrink-0 text-amber-400" />
+                <span>{config.contactoTelefono}</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-amber-500 shrink-0" />
-                <span>contacto@contraloriaestadomerida.gob.ve</span>
+              <li className="flex items-center gap-3 text-sm text-blue-200">
+                <Mail className="w-5 h-5 shrink-0 text-amber-400" />
+                <span>{config.contactoEmail}</span>
               </li>
-              <li className="flex items-start gap-3">
+              <li className="flex items-start gap-3 text-sm text-blue-200">
                 <Clock className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                 <span>Lunes a Viernes: 8:00 AM – 4:00 PM</span>
               </li>
@@ -97,16 +104,32 @@ export default function Footer() {
               Síguenos en nuestras redes sociales oficiales para mantenerte informado.
             </p>
             <div className="flex gap-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href="#"
-                  aria-label={social.label}
-                  className={`w-10 h-10 bg-gray-800 ${social.color} rounded-lg flex items-center justify-center transition-colors duration-200`}
-                >
-                  <SocialIcon d={social.d} label={social.label} />
-                </a>
-              ))}
+              {socialLinks.map((social) => {
+                // Mapear la red social con el campo en config
+                const linkMap: Record<string, string> = {
+                  'Facebook': config.redesFacebook,
+                  'Twitter': config.redesTwitter,
+                  'Instagram': config.redesInstagram,
+                  'YouTube': config.redesYoutube,
+                };
+                const url = linkMap[social.label];
+
+                // Solo renderizar si el usuario configuró una URL
+                if (!url) return null;
+
+                return (
+                  <a
+                    key={social.label}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className={`w-10 h-10 bg-gray-800 ${social.color} rounded-lg flex items-center justify-center transition-colors duration-200`}
+                  >
+                    <SocialIcon d={social.d} label={social.label} />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>
