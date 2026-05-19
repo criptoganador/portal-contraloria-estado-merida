@@ -1,8 +1,16 @@
-import { FileText, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileText, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNoticias } from '../context/NoticiasContext';
 
 export default function PrensaPage() {
-  const { noticias } = useNoticias();
+  const { noticias, totalPages, fetchNoticias } = useNoticias();
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    fetchNoticias(page, 9); // Mostrar 9 por página en el grid
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
   const publicadas = noticias.filter(n => n.publicada);
   return (
     <>
@@ -63,6 +71,29 @@ export default function PrensaPage() {
             <div className="text-center py-20 text-gray-500">
               <FileText className="w-12 h-12 mx-auto text-gray-300 mb-4" />
               <p className="text-lg">No hay noticias publicadas en este momento.</p>
+            </div>
+          )}
+
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <div className="mt-12 flex items-center justify-center gap-4">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white bg-gray-50 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <span className="text-sm font-medium text-gray-600">
+                Página {page} de {totalPages}
+              </span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-2 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white bg-gray-50 transition-colors"
+              >
+                <ChevronRight className="w-5 h-5 text-gray-600" />
+              </button>
             </div>
           )}
         </div>

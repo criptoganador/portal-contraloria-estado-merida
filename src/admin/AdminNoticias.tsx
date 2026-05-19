@@ -1,6 +1,8 @@
-import { useState, useRef } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Image as ImageIcon, Search } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Plus, Pencil, Trash2, X, Save, Image as ImageIcon, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNoticias } from '../context/NoticiasContext';
+import { useAuth } from '../context/AuthContext';
+import { uploadFile, getMimeFromBase64 } from '../utils/uploadFile';
 import type { Noticia } from '../context/NoticiasContext';
 
 const categorias = ['Auditoría', 'Formación', 'Normativa', 'Institucional', 'Participación'];
@@ -16,17 +18,23 @@ const formularioVacio: Omit<Noticia, 'id'> = {
 };
 
 export default function AdminNoticias() {
-  const { noticias, agregarNoticia, editarNoticia, eliminarNoticia } = useNoticias();
+  const { noticias, totalPages, fetchNoticias, agregarNoticia, editarNoticia, eliminarNoticia } = useNoticias();
+  const { token } = useAuth();
   const [mostrarForm, setMostrarForm] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [form, setForm] = useState(formularioVacio);
   const [busqueda, setBusqueda] = useState('');
+  const [page, setPage] = useState(1);
   const [mensaje, setMensaje] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const noticiasFiltradas = noticias.filter((n) =>
-    n.titulo.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchNoticias(page, 10, busqueda);
+    }, 400); // debounce search
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, busqueda]);
 
   const abrirNueva = () => {
     setForm(formularioVacio);
@@ -48,13 +56,20 @@ export default function AdminNoticias() {
     setMostrarForm(true);
   };
 
-  const guardar = () => {
+  const guardar = async () => {
     if (!form.titulo.trim() || !form.contenido.trim()) return;
     
     // Auto-generar resumen si no existe
     const dataAguardar = { ...form };
     if (!dataAguardar.resumen) {
       dataAguardar.resumen = dataAguardar.contenido.substring(0, 150) + '...';
+    }
+
+    // Subir la imagen como binario BYTEA si es Base64
+    if (dataAguardar.imagen && dataAguardar.imagen.startsWith('data:')) {
+      const mime = getMimeFromBase64(dataAguardar.imagen);
+      const ext = mime.split('/')[1] || 'jpg';
+      dataAguardar.imagen = await uploadFile(dataAguardar.imagen, `noticia_${dataAguardar.titulo}.${ext}`, mime, token);
     }
 
     if (editandoId !== null) {
@@ -281,7 +296,7 @@ export default function AdminNoticias() {
               </tr>
             </thead>
             <tbody>
-              {noticiasFiltradas.map((n) => (
+              {noticias.map((n) => (
                 <tr key={n.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-800 font-medium">{n.titulo}</td>
                   <td className="px-6 py-4">
@@ -321,7 +336,7 @@ export default function AdminNoticias() {
 
         {/* Mobile cards */}
         <div className="md:hidden divide-y divide-gray-100">
-          {noticiasFiltradas.map((n) => (
+          {noticias.map((n) => (
             <div key={n.id} className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -344,9 +359,34 @@ export default function AdminNoticias() {
           ))}
         </div>
 
-        {noticiasFiltradas.length === 0 && (
+        {noticias.length === 0 && (
           <div className="text-center py-12 text-gray-400 text-sm">
             No se encontraron noticias.
+          </div>
+        )}
+
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <span className="text-sm text-gray-500">
+              Página {page} de {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-2 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>

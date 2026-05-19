@@ -6,18 +6,29 @@ import InstitucionPage from './pages/InstitucionPage';
 import CompetenciasPage from './pages/CompetenciasPage';
 import MarcoLegalPage from './pages/MarcoLegalPage';
 import PrensaPage from './pages/PrensaPage';
+import MultimediaPage from './pages/MultimediaPage';
 import ContactoPage from './pages/ContactoPage';
 import AdminLayout from './admin/AdminLayout';
+import LoginPage from './pages/LoginPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
+  const isCleanLayout = location.pathname.startsWith('/admin') || location.pathname === '/login';
 
-  // Admin has its own full layout (sidebar, no public navbar/footer)
-  if (isAdmin) {
+  // Admin and Login have their own layout (no public navbar/footer)
+  if (isCleanLayout) {
     return (
       <Routes>
-        <Route path="/admin/*" element={<AdminLayout />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     );
   }
@@ -32,6 +43,7 @@ export default function App() {
           <Route path="/competencias" element={<CompetenciasPage />} />
           <Route path="/marco-legal" element={<MarcoLegalPage />} />
           <Route path="/prensa" element={<PrensaPage />} />
+          <Route path="/multimedia" element={<MultimediaPage />} />
           <Route path="/contacto" element={<ContactoPage />} />
         </Routes>
       </main>

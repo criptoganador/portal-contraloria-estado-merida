@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import {
   LayoutDashboard, FileText, FilePlus, UserCheck, LogOut,
-  Menu, ChevronRight, Shield, Settings,
+  Menu, ChevronRight, Shield, Settings, Video, KeyRound,
 } from 'lucide-react';
 import AdminDashboard from './AdminDashboard';
 import AdminNoticias from './AdminNoticias';
 import AdminDocumentos from './AdminDocumentos';
+import AdminVideos from './AdminVideos';
 import AdminContralor from './AdminContralor';
 import AdminConfiguracion from './AdminConfiguracion';
+import AdminAudit from './AdminAudit';
+import AdminPassword from './AdminPassword';
+import { useAuth } from '../context/AuthContext';
 
-type AdminView = 'dashboard' | 'noticias' | 'documentos' | 'contralor' | 'configuracion';
+type AdminView = 'dashboard' | 'noticias' | 'documentos' | 'contralor' | 'videos' | 'configuracion' | 'audit' | 'password';
 
 interface SidebarLink {
   id: AdminView;
@@ -21,13 +25,21 @@ const sidebarLinks: SidebarLink[] = [
   { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
   { id: 'noticias', label: 'Gestión de Noticias', icon: FileText },
   { id: 'documentos', label: 'Repositorio Legal', icon: FilePlus },
+  { id: 'videos', label: 'Gestión Multimedia', icon: Video },
   { id: 'contralor', label: 'Perfil del Contralor', icon: UserCheck },
   { id: 'configuracion', label: 'Configuración del Sitio', icon: Settings },
+  { id: 'audit', label: 'Bitácora de Auditoría', icon: Shield },
+  { id: 'password', label: 'Cambiar Contraseña', icon: KeyRound },
 ];
 
 export default function AdminLayout() {
+  const { usuario, logout } = useAuth();
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const usuarioInitials = usuario?.nombre
+    ? usuario.nombre.split(' ').map((n) => n[0]).join('').toUpperCase()
+    : 'AD';
 
   const renderView = () => {
     switch (currentView) {
@@ -37,10 +49,16 @@ export default function AdminLayout() {
         return <AdminNoticias />;
       case 'documentos':
         return <AdminDocumentos />;
+      case 'videos':
+        return <AdminVideos />;
       case 'contralor':
         return <AdminContralor />;
       case 'configuracion':
         return <AdminConfiguracion />;
+      case 'audit':
+        return <AdminAudit />;
+      case 'password':
+        return <AdminPassword />;
     }
   };
 
@@ -102,15 +120,18 @@ export default function AdminLayout() {
         {/* User info + logout */}
         <div className="p-4 border-t border-blue-900">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 bg-blue-800 rounded-full flex items-center justify-center text-sm font-bold">
-              JP
+            <div className="w-9 h-9 bg-blue-800 rounded-full flex items-center justify-center text-sm font-bold text-white">
+              {usuarioInitials}
             </div>
             <div>
-              <p className="text-sm font-medium">Juan Pérez</p>
+              <p className="text-sm font-medium text-white">{usuario?.nombre || 'Administrador'}</p>
               <p className="text-xs text-blue-300">Administrador</p>
             </div>
           </div>
-          <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-200 hover:text-white hover:bg-blue-900 rounded-lg transition-colors">
+          <button 
+            onClick={logout}
+            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-200 hover:text-white hover:bg-blue-900 rounded-lg transition-colors cursor-pointer"
+          >
             <LogOut className="w-4 h-4" />
             Cerrar Sesión
           </button>

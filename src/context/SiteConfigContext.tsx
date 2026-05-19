@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 
 interface SiteConfig {
   titulo: string;
@@ -52,30 +53,66 @@ interface SiteConfigContextType {
 const SiteConfigContext = createContext<SiteConfigContextType | undefined>(undefined);
 
 export function SiteConfigProvider({ children }: { children: ReactNode }) {
-  const [config, setConfig] = useState<SiteConfig>(() => {
-    const saved = localStorage.getItem('site_config');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return { ...defaultConfig, ...parsed };
-      } catch (e) {
-        console.error("Error parsing site config from local storage", e);
-      }
-    }
-    return defaultConfig;
-  });
+  const [config, setConfig] = useState<SiteConfig>(defaultConfig);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('site_config', JSON.stringify(config));
-  }, [config]);
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    fetch(`${API_URL}/config`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Error al obtener la configuración');
+        return res.json();
+      })
+      .then((data) => {
+        setConfig((prev) => ({ ...prev, ...data }));
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error al obtener la configuración del servidor, intentando localStorage:", err);
+        const saved = localStorage.getItem('site_config');
+        if (saved) {
+          try {
+            setConfig(JSON.parse(saved));
+          } catch (e) {
+            console.error("Error al parsear la configuración local:", e);
+          }
+        }
+        setLoading(false);
+      });
+  }, []);
 
-  const updateConfig = (newConfig: Partial<SiteConfig>) => {
-    setConfig((prev) => ({ ...prev, ...newConfig }));
+  const { token } = useAuth();
+
+  const updateConfig = async (newConfig: Partial<SiteConfig>) => {
+    const updated = { ...config, ...newConfig };
+    setConfig(updated);
+    localStorage.setItem('site_config', JSON.stringify(updated));
+
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${API_URL}/config`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(updated),
+      });
+      if (!res.ok) {
+        throw new Error('Error al guardar la configuración en la base de datos');
+      }
+    } catch (err) {
+      console.error("Error al sincronizar la configuración con Neon:", err);
+    }
   };
 
   return (
     <SiteConfigContext.Provider value={{ config, updateConfig }}>
-      {children}
+      {!loading && children}
     </SiteConfigContext.Provider>
   );
 }

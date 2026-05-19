@@ -1,15 +1,45 @@
-import { useState } from 'react';
-import { Download, Filter } from 'lucide-react';
-import { documentosLegales } from '../data/mockData';
+import { useState, useEffect } from 'react';
+import { Download, Filter, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { useDocumentos } from '../context/DocumentosContext';
 
 const categorias = ['Todos', 'Gaceta', 'Resolución', 'Providencia', 'Circular'] as const;
 
 export default function MarcoLegalPage() {
   const [filtro, setFiltro] = useState<string>('Todos');
+  const [page, setPage] = useState(1);
+  const { documentos, totalPages, fetchDocumentos } = useDocumentos();
 
-  const documentosFiltrados = filtro === 'Todos'
-    ? documentosLegales
-    : documentosLegales.filter((d) => d.categoria === filtro);
+  useEffect(() => {
+    fetchDocumentos(page, 15, '', filtro);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, filtro]);
+
+  // Filtrar solo los publicados para la vista pública (aunque el endpoint ya debería devolver solo los publicados o lo filtramos aquí si no tenemos endpoint específico para public)
+  const documentosFiltrados = documentos.filter(d => d.estado === 'Publicado');
+
+  const descargarArchivo = async (titulo: string, archivo: string) => {
+    if (!archivo || archivo === '#') {
+      alert('Archivo no disponible para este documento.');
+      return;
+    }
+    try {
+      const response = await fetch(archivo);
+      if (!response.ok) throw new Error('Error al descargar');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${titulo.replace(/[/\\?%*:|"<>]/g, '-')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Error al descargar el archivo:", e);
+      alert('Ocurrió un error al descargar el archivo.');
+    }
+  };
 
   return (
     <>
@@ -67,10 +97,24 @@ export default function MarcoLegalPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button className="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors">
-                        <Download className="w-4 h-4" />
-                        PDF
-                      </button>
+                      <div className="flex items-center justify-center gap-3">
+                        <button 
+                          onClick={() => window.open(doc.archivo, '_blank')}
+                          className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer"
+                          title="Ver en el navegador"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Ver
+                        </button>
+                        <button 
+                          onClick={() => descargarArchivo(doc.titulo, doc.archivo)}
+                          className="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors cursor-pointer"
+                          title="Descargar a la PC"
+                        >
+                          <Download className="w-4 h-4" />
+                          Descargar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -89,10 +133,22 @@ export default function MarcoLegalPage() {
                 <p className="text-xs text-gray-400 mb-4">
                   {new Date(doc.fecha).toLocaleDateString('es-VE', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
-                <button className="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 font-medium">
-                  <Download className="w-4 h-4" />
-                  Descargar PDF
-                </button>
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={() => window.open(doc.archivo, '_blank')}
+                    className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Ver
+                  </button>
+                  <button 
+                    onClick={() => descargarArchivo(doc.titulo, doc.archivo)}
+                    className="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 font-medium cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    Descargar
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -100,6 +156,31 @@ export default function MarcoLegalPage() {
           {documentosFiltrados.length === 0 && (
             <div className="text-center py-12 text-gray-400">
               <p>No se encontraron documentos en esta categoría.</p>
+            </div>
+          )}
+
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-6">
+              <span className="text-sm text-gray-500">
+                Página {page} de {totalPages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="p-2 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white bg-gray-50 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-600" />
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="p-2 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white bg-gray-50 transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
             </div>
           )}
         </div>

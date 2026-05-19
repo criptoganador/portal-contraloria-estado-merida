@@ -7,6 +7,7 @@ export const navLinks: NavLink[] = [
   { label: 'Competencias', path: '/competencias' },
   { label: 'Marco Legal', path: '/marco-legal' },
   { label: 'Prensa', path: '/prensa' },
+  { label: 'Multimedia', path: '/multimedia' },
   { label: 'Contacto', path: '/contacto' },
 ];
 

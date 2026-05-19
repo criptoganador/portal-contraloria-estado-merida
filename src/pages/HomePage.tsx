@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, FileText, AlertTriangle, Shield, BarChart3, Users, ChevronRight, ChevronLeft } from 'lucide-react';
+import { ArrowRight, FileText, AlertTriangle, Shield, BarChart3, Users, ChevronRight, ChevronLeft, BookOpen, Building, HelpCircle, Phone, Newspaper, Briefcase, Scale } from 'lucide-react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { useNoticias } from '../context/NoticiasContext';
 
@@ -124,9 +124,22 @@ export default function HomePage() {
       {/* Quick access */}
       <section className="bg-white border-b border-gray-100 relative z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-center">
             {(config.botonesAcceso || []).map((item, idx) => {
-              const iconMap: Record<string, React.ComponentType<{ className?: string }>> = { Shield, FileText, BarChart3, Users, AlertTriangle };
+              const iconMap: Record<string, React.ComponentType<{ className?: string }>> = { 
+                Shield, 
+                FileText, 
+                BarChart3, 
+                Users, 
+                AlertTriangle,
+                BookOpen,
+                Building,
+                HelpCircle,
+                Phone,
+                Newspaper,
+                Briefcase,
+                Scale
+              };
               const IconComp = iconMap[item.icono] || Shield;
               return (
                 <Link

@@ -1,60 +1,63 @@
-import { useState, useRef } from 'react';
-import { Plus, Trash2, Upload, X, Search, FileUp } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Plus, Trash2, Upload, X, Search, FileUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useDocumentos } from '../context/DocumentosContext';
+import { useAuth } from '../context/AuthContext';
+import { uploadFile } from '../utils/uploadFile';
+import type { Documento } from '../context/DocumentosContext';
 
-interface DocumentoAdmin {
-  id: number;
-  titulo: string;
-  tipo: 'Ley' | 'Gaceta' | 'Resolución' | 'Providencia' | 'Circular';
-  fecha: string;
-  estado: 'Publicado' | 'Borrador';
-  archivo: string;
-}
+const categorias = ['Gaceta', 'Resolución', 'Providencia', 'Circular'];
 
-const documentosIniciales: DocumentoAdmin[] = [
-  { id: 1, titulo: 'Ley Orgánica de la Contraloría General de la República', tipo: 'Ley', fecha: '2024-12-15', estado: 'Publicado', archivo: 'ley-organica.pdf' },
-  { id: 2, titulo: 'Resolución N° 001-2026 — Normas para la Rendición de Cuentas', tipo: 'Resolución', fecha: '2026-01-20', estado: 'Publicado', archivo: 'res-001-2026.pdf' },
-  { id: 3, titulo: 'Gaceta Oficial Nro 402 — Presupuesto Estadal', tipo: 'Gaceta', fecha: '2026-03-10', estado: 'Publicado', archivo: 'gaceta-402.pdf' },
-  { id: 4, titulo: 'Providencia Administrativa N° 012 — Declaración Jurada', tipo: 'Providencia', fecha: '2026-02-10', estado: 'Borrador', archivo: 'prov-012.pdf' },
-];
-
-const tiposDocumento: DocumentoAdmin['tipo'][] = ['Ley', 'Gaceta', 'Resolución', 'Providencia', 'Circular'];
-
-const formVacio = { titulo: '', tipo: 'Gaceta' as DocumentoAdmin['tipo'], fecha: new Date().toISOString().split('T')[0], archivo: '' };
+const formVacio = { titulo: '', categoria: 'Gaceta', fecha: new Date().toISOString().split('T')[0], archivo: '', estado: 'Publicado' as const };
 
 export default function AdminDocumentos() {
-  const [documentos, setDocumentos] = useState<DocumentoAdmin[]>(documentosIniciales);
+  const { documentos, totalPages, fetchDocumentos, agregarDocumento, eliminarDocumento } = useDocumentos();
+  const { token } = useAuth();
   const [mostrarForm, setMostrarForm] = useState(false);
   const [form, setForm] = useState(formVacio);
   const [busqueda, setBusqueda] = useState('');
-  const [filtroTipo, setFiltroTipo] = useState<string>('Todos');
+  const [filtroCategoria, setFiltroCategoria] = useState<string>('Todos');
+  const [page, setPage] = useState(1);
   const [mensaje, setMensaje] = useState('');
+  const [subiendo, setSubiendo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const docsFiltrados = documentos.filter((d) => {
-    const matchBusqueda = d.titulo.toLowerCase().includes(busqueda.toLowerCase());
-    const matchTipo = filtroTipo === 'Todos' || d.tipo === filtroTipo;
-    return matchBusqueda && matchTipo;
-  });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchDocumentos(page, 10, busqueda, filtroCategoria);
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, busqueda, filtroCategoria]);
 
-  const nextId = useRef(100);
-
-  const publicar = () => {
+  const publicar = async () => {
     if (!form.titulo.trim()) return;
-    const nuevo: DocumentoAdmin = {
-      id: nextId.current++,
-      titulo: form.titulo,
-      tipo: form.tipo,
-      fecha: form.fecha,
-      estado: 'Publicado',
-      archivo: form.archivo || 'documento.pdf',
-    };
-    setDocumentos((prev) => [nuevo, ...prev]);
-    setForm(formVacio);
-    setMostrarForm(false);
-    mostrarMsg('Documento publicado exitosamente');
+    try {
+      setSubiendo(true);
+      // Subir el archivo PDF como binario BYTEA y obtener la URL
+      let archivoUrl = form.archivo;
+      if (form.archivo && form.archivo.startsWith('data:')) {
+        archivoUrl = await uploadFile(form.archivo, `${form.titulo}.pdf`, 'application/pdf', token);
+      }
+      await agregarDocumento({
+        titulo: form.titulo,
+        categoria: form.categoria,
+        fecha: form.fecha,
+        estado: form.estado,
+        archivo: archivoUrl || '#',
+      });
+      setForm(formVacio);
+      setMostrarForm(false);
+      mostrarMsg('Documento publicado exitosamente');
+    } catch (err) {
+      console.error(err);
+      mostrarMsg('Error al subir el documento');
+    } finally {
+      setSubiendo(false);
+    }
   };
 
-  const eliminar = (id: number) => {
-    setDocumentos((prev) => prev.filter((d) => d.id !== id));
+  const eliminar = async (id: number) => {
+    await eliminarDocumento(id);
     mostrarMsg('Documento eliminado');
   };
 
@@ -65,6 +68,21 @@ export default function AdminDocumentos() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        alert('Por favor selecciona un archivo PDF válido');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm((prev) => ({ ...prev, archivo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -98,17 +116,17 @@ export default function AdminDocumentos() {
 
       {/* Type filter */}
       <div className="flex gap-2 flex-wrap">
-        {['Todos', ...tiposDocumento].map((tipo) => (
+        {['Todos', ...categorias].map((cat) => (
           <button
-            key={tipo}
-            onClick={() => setFiltroTipo(tipo)}
+            key={cat}
+            onClick={() => setFiltroCategoria(cat)}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              filtroTipo === tipo
+              filtroCategoria === cat
                 ? 'bg-blue-900 text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            {tipo}
+            {cat}
           </button>
         ))}
       </div>
@@ -138,16 +156,16 @@ export default function AdminDocumentos() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="doc-tipo" className="block text-sm font-medium text-gray-700 mb-1.5">Tipo de Documento</label>
+                <label htmlFor="doc-categoria" className="block text-sm font-medium text-gray-700 mb-1.5">Categoría</label>
                 <select
-                  id="doc-tipo"
-                  name="tipo"
-                  value={form.tipo}
+                  id="doc-categoria"
+                  name="categoria"
+                  value={form.categoria}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white"
                 >
-                  {tiposDocumento.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                  {categorias.map((c) => (
+                    <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
               </div>
@@ -164,12 +182,38 @@ export default function AdminDocumentos() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Archivo PDF</label>
-              <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-blue-300 transition-colors cursor-pointer">
-                <FileUp className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Seleccionar archivo PDF</p>
-                <p className="text-xs text-gray-400 mt-1">PDF — Máx. 10MB</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="doc-estado" className="block text-sm font-medium text-gray-700 mb-1.5">Estado</label>
+                <select
+                  id="doc-estado"
+                  name="estado"
+                  value={form.estado}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white"
+                >
+                  <option value="Publicado">Publicado</option>
+                  <option value="Borrador">Borrador</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Archivo PDF *</label>
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-gray-200 rounded-lg p-3 text-center hover:border-blue-300 transition-colors cursor-pointer relative"
+                >
+                  <FileUp className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+                  <p className="text-xs text-gray-600 font-medium">
+                    {form.archivo ? '✓ PDF Cargado' : 'Seleccionar archivo PDF'}
+                  </p>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
               </div>
             </div>
 
@@ -177,9 +221,9 @@ export default function AdminDocumentos() {
               <button onClick={() => setMostrarForm(false)} className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
                 Cancelar
               </button>
-              <button onClick={publicar} className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-lg transition-colors text-sm">
+              <button onClick={publicar} disabled={subiendo} className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-medium px-5 py-2.5 rounded-lg transition-colors text-sm">
                 <Upload className="w-4 h-4" />
-                Publicar
+                {subiendo ? 'Subiendo...' : 'Publicar'}
               </button>
             </div>
           </div>
@@ -193,18 +237,18 @@ export default function AdminDocumentos() {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Título</th>
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Tipo</th>
+                <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Categoría</th>
                 <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-32">Fecha</th>
                 <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Estado</th>
                 <th className="text-right px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {docsFiltrados.map((d) => (
+              {documentos.map((d: Documento) => (
                 <tr key={d.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-800 font-medium">{d.titulo}</td>
                   <td className="px-6 py-4">
-                    <span className="text-xs font-medium px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md">{d.tipo}</span>
+                    <span className="text-xs font-medium px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md">{d.categoria}</span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {new Date(d.fecha).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -226,12 +270,12 @@ export default function AdminDocumentos() {
         </div>
 
         <div className="md:hidden divide-y divide-gray-100">
-          {docsFiltrados.map((d) => (
+          {documentos.map((d: Documento) => (
             <div key={d.id} className="p-4 flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm text-gray-800 truncate">{d.titulo}</p>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <span className="text-xs font-medium px-2 py-0.5 bg-blue-50 text-blue-700 rounded">{d.tipo}</span>
+                  <span className="text-xs font-medium px-2 py-0.5 bg-blue-50 text-blue-700 rounded">{d.categoria}</span>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded ${d.estado === 'Publicado' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{d.estado}</span>
                   <span className="text-xs text-gray-400">{new Date(d.fecha).toLocaleDateString('es-VE')}</span>
                 </div>
@@ -243,8 +287,33 @@ export default function AdminDocumentos() {
           ))}
         </div>
 
-        {docsFiltrados.length === 0 && (
+        {documentos.length === 0 && (
           <div className="text-center py-12 text-gray-400 text-sm">No se encontraron documentos.</div>
+        )}
+
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <span className="text-sm text-gray-500">
+              Página {page} de {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-2 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
