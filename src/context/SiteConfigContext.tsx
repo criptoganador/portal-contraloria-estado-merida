@@ -72,7 +72,8 @@ export function SiteConfigProvider({ children }: { children: ReactNode }) {
         const saved = localStorage.getItem('site_config');
         if (saved) {
           try {
-            setConfig(JSON.parse(saved));
+            const parsed = JSON.parse(saved);
+            setConfig((prev) => ({ ...prev, ...parsed }));
           } catch (e) {
             console.error("Error al parsear la configuración local:", e);
           }

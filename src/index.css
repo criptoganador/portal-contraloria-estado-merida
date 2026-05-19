@@ -1,12 +1,31 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Colores Institucionales Escudo de Mérida */
+  --color-brand-blue: #1e3a8a; /* Azur (Azul oscuro profundo) */
+  --color-brand-gold: #f59e0b; /* Oro (Ambar/Dorado) */
+  --color-brand-gold-hover: #d97706;
+  --color-brand-red: #b91c1c; /* Gules (Rojo oscuro institucional) */
+  --color-brand-red-hover: #991b1b;
+  --color-brand-green: #059669; /* Verde (Ramas de café/laurel) */
 }
 
 /* Base resets */
 html {
   scroll-behavior: smooth;
+}
+
+@keyframes gradient-x {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 body {
@@ -20,6 +39,7 @@ body {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -27,6 +47,7 @@ body {
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

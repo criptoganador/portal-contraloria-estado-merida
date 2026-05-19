@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
+import sharp from 'sharp';
 import pool from './db.js';
 import { signToken, requireAuth } from './auth.js';
 import { encrypt, decrypt } from './crypto.js';
@@ -447,17 +448,40 @@ app.post('/api/files', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Se requiere base64, nombre y mimeType' });
     }
 
-    // Extraer solo la parte de datos del Data URL (quitar "data:application/pdf;base64,")
     const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
-    const buffer = Buffer.from(base64Data, 'base64');
+    let buffer = Buffer.from(base64Data, 'base64');
+    let finalMimeType = mimeType;
+    let finalNombre = nombre;
+
+    // Si es una imagen, la comprimimos y la convertimos a WebP
+    if (mimeType.startsWith('image/') && !mimeType.includes('svg')) {
+      try {
+        buffer = await sharp(buffer)
+          .webp({ quality: 80, effort: 4 }) // Compresión agresiva manteniendo buena calidad visual
+          .resize({ width: 1920, withoutEnlargement: true }) // Evitar imágenes absurdamente grandes
+          .toBuffer();
+        finalMimeType = 'image/webp';
+        
+        // Cambiar la extensión a .webp
+        const lastDotIndex = nombre.lastIndexOf('.');
+        if (lastDotIndex !== -1) {
+          finalNombre = nombre.substring(0, lastDotIndex) + '.webp';
+        } else {
+          finalNombre = nombre + '.webp';
+        }
+      } catch (sharpError) {
+        console.error('Error al comprimir la imagen, guardando original:', sharpError);
+        // Si sharp falla (por formato no soportado u otro motivo), usamos el buffer original
+      }
+    }
 
     const result = await pool.query(
       "INSERT INTO archivos_blob (nombre, mime_type, datos, tamano) VALUES ($1, $2, $3, $4) RETURNING id, nombre, mime_type, tamano, created_at",
-      [nombre, mimeType, buffer, buffer.length]
+      [finalNombre, finalMimeType, buffer, buffer.length]
     );
 
     const file = result.rows[0];
-    await logAudit(req, 'SUBIR_ARCHIVO', `Se subió el archivo: "${nombre}" (${(buffer.length / 1024).toFixed(1)} KB)`);
+    await logAudit(req, 'SUBIR_ARCHIVO', `Se subió el archivo: "${finalNombre}" (${(buffer.length / 1024).toFixed(1)} KB)`);
 
     res.status(201).json({
       success: true,

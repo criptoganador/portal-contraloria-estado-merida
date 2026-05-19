@@ -12,15 +12,12 @@ export default function Navbar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header 
-      className="sticky top-0 z-50 shadow-lg"
-      style={{ backgroundColor: config.navColor }}
-    >
+    <header className="sticky top-0 z-50 shadow-md bg-white border-b-4 border-amber-500">
       {/* Top bar */}
-      <div className="bg-blue-900/80 border-b border-blue-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-xs text-blue-200 py-1.5">
+      <div className="bg-blue-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-xs py-1.5 opacity-90">
           <span>República Bolivariana de Venezuela — Estado Mérida</span>
-          <span className="hidden sm:inline">Gobierno en línea</span>
+          <span className="hidden sm:inline font-medium">Gobierno en línea</span>
         </div>
       </div>
 
@@ -41,8 +38,8 @@ export default function Navbar() {
               )}
             </div>
             <div className="hidden sm:block">
-              <p className="text-white font-bold text-sm md:text-base leading-tight">{config.titulo}</p>
-              <p className="text-blue-200 text-xs md:text-sm leading-tight">{config.subtitulo}</p>
+              <p className="text-blue-900 font-extrabold text-sm md:text-base leading-tight uppercase tracking-tight">{config.titulo}</p>
+              <p className="text-gray-500 text-xs md:text-sm leading-tight font-medium">{config.subtitulo}</p>
             </div>
           </Link>
 
@@ -52,10 +49,10 @@ export default function Navbar() {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`px-3 xl:px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                className={`px-3 xl:px-4 py-2 rounded-md text-sm font-bold transition-all duration-200 uppercase tracking-wide ${
                   isActive(link.path)
-                    ? 'bg-blue-800 text-white'
-                    : 'text-blue-100 hover:bg-blue-800/50 hover:text-white'
+                    ? 'text-blue-900 bg-slate-100 shadow-sm'
+                    : 'text-gray-600 hover:text-red-700 hover:bg-slate-50'
                 }`}
               >
                 {link.label}
@@ -67,7 +64,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 rounded-md text-blue-200 hover:text-white hover:bg-blue-800 transition-colors"
+            className="lg:hidden p-2 rounded-md text-blue-900 hover:bg-slate-100 transition-colors"
             aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
           >
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -77,20 +74,20 @@ export default function Navbar() {
 
       {/* Mobile nav */}
       <div
-        className={`lg:hidden overflow-hidden transition-all duration-300 ${
-          mobileOpen ? 'max-h-96 border-t border-blue-800' : 'max-h-0'
+        className={`lg:hidden overflow-hidden transition-all duration-300 bg-white ${
+          mobileOpen ? 'max-h-96 border-t border-gray-100 shadow-inner' : 'max-h-0'
         }`}
       >
-        <div className="px-4 py-3 space-y-1 bg-blue-900/95">
+        <div className="px-4 py-3 space-y-1">
           {navLinks.map((link) => (
             <Link
               key={link.path}
               to={link.path}
               onClick={() => setMobileOpen(false)}
-              className={`block px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+              className={`block px-4 py-3 rounded-md text-sm font-bold uppercase transition-colors ${
                 isActive(link.path)
-                  ? 'bg-blue-800 text-white'
-                  : 'text-blue-100 hover:bg-blue-800/50 hover:text-white'
+                  ? 'text-blue-900 bg-slate-100'
+                  : 'text-gray-600 hover:text-red-700 hover:bg-slate-50'
               }`}
             >
               {link.label}

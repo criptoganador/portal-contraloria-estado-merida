@@ -20,7 +20,7 @@ export default function Footer() {
   const { config } = useSiteConfig();
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
+    <footer className="bg-blue-900 text-blue-100 border-t-4 border-amber-500">
       {/* Main footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
@@ -39,11 +39,11 @@ export default function Footer() {
                 )}
               </div>
               <div>
-                <p className="text-white font-bold text-sm">{config.titulo}</p>
-                <p className="text-gray-400 text-xs">{config.subtitulo}</p>
+                <p className="text-white font-bold text-sm uppercase tracking-tight">{config.titulo}</p>
+                <p className="text-blue-200 text-xs font-medium">{config.subtitulo}</p>
               </div>
             </div>
-            <p className="text-sm text-gray-400 leading-relaxed">
+            <p className="text-sm text-blue-200/80 leading-relaxed">
               Órgano de control fiscal del Estado Mérida, al servicio de la transparencia, la rendición de cuentas y el fortalecimiento institucional.
             </p>
           </div>
@@ -100,7 +100,7 @@ export default function Footer() {
               <div className="w-1 h-5 bg-amber-500 rounded-full" />
               Redes Sociales
             </h3>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-blue-200/80 mb-4">
               Síguenos en nuestras redes sociales oficiales para mantenerte informado.
             </p>
             <div className="flex gap-3">
@@ -124,7 +124,7 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={social.label}
-                    className={`w-10 h-10 bg-gray-800 ${social.color} rounded-lg flex items-center justify-center transition-colors duration-200`}
+                    className={`w-10 h-10 bg-white/10 ${social.color} rounded-lg flex items-center justify-center transition-colors duration-200 text-white`}
                   >
                     <SocialIcon d={social.d} label={social.label} />
                   </a>
@@ -135,13 +135,12 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className="border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-500">
+      <div className="border-t border-blue-800/50 bg-blue-950/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-blue-200/60">
           <span>© {new Date().getFullYear()} Contraloría del Estado Mérida. Todos los derechos reservados.</span>
           <span>
             Desarrollado por{' '}
-            <a href="#" className="text-amber-500 hover:text-amber-400 font-medium transition-colors">
+            <a href="#" className="text-amber-500 hover:text-white font-medium transition-colors">
               AsicMe Estudio
             </a>
           </span>

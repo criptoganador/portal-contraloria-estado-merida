@@ -14,11 +14,11 @@ export default function PrensaPage() {
   const publicadas = noticias.filter(n => n.publicada);
   return (
     <>
-      <section className="bg-gradient-to-r from-blue-950 to-blue-800 py-14 md:py-20">
+      <section className="bg-slate-50 py-14 md:py-20 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-amber-400 text-sm font-semibold uppercase tracking-wider mb-2">Comunicaciones</p>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Sala de Prensa</h1>
-          <p className="text-blue-200 mt-4 max-w-2xl text-lg">
+          <p className="text-red-700 text-sm font-bold uppercase tracking-wider mb-2">Comunicaciones</p>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-900 tracking-tight">Sala de Prensa</h1>
+          <p className="text-gray-600 mt-4 max-w-2xl text-lg font-medium">
             Mantente informado sobre las actividades y actuaciones de la Contraloría del Estado Mérida.
           </p>
         </div>
@@ -41,7 +41,7 @@ export default function PrensaPage() {
                       <span className="text-xs">Imagen de noticia</span>
                     </div>
                   )}
-                  <span className="absolute top-3 left-3 bg-amber-500 text-blue-950 text-xs font-semibold px-2.5 py-1 rounded-md z-10">
+                  <span className="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-md z-10 shadow-sm uppercase tracking-wider">
                     {noticia.categoria}
                   </span>
                 </div>
@@ -59,10 +59,10 @@ export default function PrensaPage() {
                   <p className="text-sm text-gray-500 leading-relaxed line-clamp-3 flex-1">
                     {noticia.resumen}
                   </p>
-                  <button className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900 text-sm font-medium mt-4 transition-colors self-start">
+                  <div className="inline-flex items-center gap-1 text-red-700 hover:text-red-800 text-sm font-bold mt-4 transition-colors uppercase tracking-wide cursor-pointer">
                     Leer más
                     <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  </div>
                 </div>
               </article>
             ))}
@@ -80,19 +80,19 @@ export default function PrensaPage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white bg-gray-50 transition-colors"
+                className="p-2 rounded-lg border border-gray-200 bg-white text-blue-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
+                <ChevronLeft className="w-5 h-5" />
               </button>
-              <span className="text-sm font-medium text-gray-600">
-                Página {page} de {totalPages}
+              <span className="text-sm font-bold text-gray-600">
+                Página {page} de {totalPages || 1}
               </span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="p-2 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white bg-gray-50 transition-colors"
+                disabled={page >= totalPages}
+                className="p-2 rounded-lg border border-gray-200 bg-white text-blue-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronRight className="w-5 h-5 text-gray-600" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           )}

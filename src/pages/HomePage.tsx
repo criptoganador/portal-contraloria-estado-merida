@@ -36,7 +36,7 @@ export default function HomePage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 overflow-hidden">
+      <section className="relative bg-slate-50 overflow-hidden">
         
         {/* Carousel Backgrounds */}
         {images.length > 0 ? (
@@ -55,7 +55,7 @@ export default function HomePage() {
               />
             ))}
             {/* Overlay para oscurecer las imágenes y que el texto se lea bien */}
-            <div className="absolute inset-0 bg-blue-950/70 z-[1]" />
+            <div className="absolute inset-0 bg-slate-900/60 z-[1]" />
           </>
         ) : (
           <>
@@ -68,7 +68,7 @@ export default function HomePage() {
           />
         </div>
             <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl z-[1]" />
-            <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-400/10 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl z-[1]" />
+            <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-900/10 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl z-[1]" />
           </>
         )}
 
@@ -80,7 +80,7 @@ export default function HomePage() {
                 key={idx}
                 onClick={() => setCurrentImageIndex(idx)}
                 className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                  idx === currentImageIndex ? 'bg-amber-400 w-8' : 'bg-white/50 hover:bg-white'
+                  idx === currentImageIndex ? 'bg-amber-500 w-8' : 'bg-white/50 hover:bg-white'
                 }`}
                 aria-label={`Ir a la imagen ${idx + 1}`}
               />
@@ -90,31 +90,41 @@ export default function HomePage() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 lg:py-24 z-10">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/20 border border-amber-500/30 rounded-full text-amber-300 text-sm font-medium mb-6">
+            <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold mb-6 ${images.length > 0 ? 'bg-amber-500 text-white shadow-md' : 'bg-amber-500/20 text-amber-600 border border-amber-500/30'}`}>
               <Shield className="w-4 h-4" />
               Contraloría del Estado Mérida
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6"
-                dangerouslySetInnerHTML={{ __html: config.heroTitulo.replace('Control Fiscal', '<span class="text-amber-400">Control Fiscal</span>') }}
+            <h1 className={`text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.1] mb-6 tracking-tighter drop-shadow-sm ${images.length > 0 ? 'text-white' : 'text-blue-900'}`}
+                dangerouslySetInnerHTML={{ 
+                  __html: (config.heroTitulo || 'Transparencia y Control Fiscal').replace(
+                    'Control Fiscal', 
+                    `<span class="relative inline-block">
+                      <span class="text-transparent bg-clip-text bg-gradient-to-r ${images.length > 0 ? 'from-amber-300 to-amber-500' : 'from-amber-500 to-red-700'}">Control Fiscal</span>
+                      <span class="absolute -bottom-2 left-0 w-full h-1.5 bg-gradient-to-r ${images.length > 0 ? 'from-amber-400 via-white to-amber-400' : 'from-red-700 via-amber-500 to-red-700'} bg-[length:200%_auto] animate-[gradient-x_3s_linear_infinite] rounded-full opacity-90"></span>
+                    </span>`
+                  ) 
+                }}
             />
-            <p className="text-lg sm:text-xl text-blue-100 leading-relaxed mb-10 max-w-2xl font-medium drop-shadow-sm">
+            <p className={`text-lg sm:text-2xl leading-relaxed mb-10 max-w-2xl font-medium ${images.length > 0 ? 'text-gray-100 drop-shadow-md' : 'text-gray-600'}`}>
               {config.heroTexto}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 to="/marco-legal"
-                className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-blue-950 font-semibold px-6 py-3.5 rounded-lg transition-colors duration-200 text-sm sm:text-base"
+                className="relative overflow-hidden group inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-500/80 hover:backdrop-blur-md hover:border-white/50 hover:shadow-lg hover:-translate-y-0.5 text-white shadow-md font-bold px-6 py-3.5 rounded-lg transition-all duration-300 text-sm sm:text-base uppercase tracking-wide border border-transparent"
               >
-                <FileText className="w-5 h-5" />
-                Ir a Gacetas
-                <ArrowRight className="w-4 h-4" />
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 z-0"></div>
+                <FileText className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">Ir a Gacetas</span>
+                <ArrowRight className="w-4 h-4 relative z-10" />
               </Link>
               <Link
                 to="/contacto"
-                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-semibold px-6 py-3.5 rounded-lg transition-colors duration-200 text-sm sm:text-base"
+                className={`relative overflow-hidden group inline-flex items-center justify-center gap-2 font-bold px-6 py-3.5 rounded-lg transition-all duration-300 text-sm sm:text-base uppercase tracking-wide border hover:shadow-lg hover:-translate-y-0.5 ${images.length > 0 ? 'bg-white/10 hover:bg-white/20 hover:backdrop-blur-lg text-white border-white/20 hover:border-white/60' : 'bg-white text-blue-900 border-gray-200 shadow-sm hover:border-blue-900/30 hover:bg-white/80 hover:backdrop-blur-md'}`}
               >
-                <AlertTriangle className="w-5 h-5" />
-                Denuncias
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 z-0"></div>
+                <AlertTriangle className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">Denuncias</span>
               </Link>
             </div>
           </div>
@@ -145,13 +155,13 @@ export default function HomePage() {
                 <Link
                   key={idx}
                   to={item.to}
-                  className="flex items-center gap-4 bg-white rounded-xl shadow-md hover:shadow-lg p-5 transition-shadow duration-200 border border-gray-100"
+                  className="group flex items-center gap-4 bg-white rounded-xl shadow-sm hover:shadow-xl hover:shadow-blue-900/10 p-5 transition-all duration-300 ease-out border border-gray-100 hover:border-blue-900/20 hover:-translate-y-1.5"
                 >
-                  <div className={`${item.color} p-3 rounded-lg text-white shrink-0`}>
+                  <div className={`${item.color} p-3 rounded-lg text-white shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-md`}>
                     <IconComp className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800 text-sm">{item.label}</p>
+                    <p className="font-semibold text-gray-800 text-sm transition-colors duration-300 group-hover:text-blue-900">{item.label}</p>
                     <p className="text-xs text-gray-500">{item.desc}</p>
                   </div>
                 </Link>
@@ -166,12 +176,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <p className="text-sm font-semibold text-amber-600 uppercase tracking-wider mb-2">Sala de Prensa</p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Últimas Noticias</h2>
+              <p className="text-sm font-bold text-red-700 uppercase tracking-wider mb-2">Sala de Prensa</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-blue-900">Últimas Noticias</h2>
             </div>
             <Link
               to="/prensa"
-              className="hidden sm:inline-flex items-center gap-1 text-blue-700 hover:text-blue-900 font-medium text-sm transition-colors"
+              className="hidden sm:inline-flex items-center gap-1 text-blue-900 hover:text-red-700 font-bold text-sm transition-colors uppercase tracking-wide"
             >
               Ver todas
               <ChevronRight className="w-4 h-4" />
@@ -209,12 +219,12 @@ export default function HomePage() {
                       <span className="text-xs">Imagen de noticia</span>
                     </div>
                   )}
-                  <span className="absolute top-3 left-3 bg-amber-500 text-blue-950 text-xs font-semibold px-2.5 py-1 rounded-md z-10">
+                  <span className="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-md z-10 shadow-sm uppercase tracking-wider">
                     {noticia.categoria}
                   </span>
                 </div>
                 <div className="p-5 flex flex-col flex-1">
-                  <time className="text-xs text-gray-400 mb-2">
+                  <time className="text-xs text-gray-500 font-medium mb-2">
                     {new Date(noticia.fecha).toLocaleDateString('es-VE', {
                       year: 'numeric',
                       month: 'long',
@@ -229,7 +239,7 @@ export default function HomePage() {
                   </p>
                   <Link
                     to="/prensa"
-                    className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900 text-sm font-medium mt-4 transition-colors"
+                    className="inline-flex items-center gap-1 text-red-700 hover:text-red-800 text-sm font-bold mt-4 transition-colors uppercase tracking-wide"
                   >
                     Leer más
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -264,15 +274,16 @@ export default function HomePage() {
       </section>
 
       {/* CTA Banner */}
-      <section className="bg-blue-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex flex-col md:flex-row items-center justify-between gap-6">
+      <section className="bg-blue-900 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">¿Deseas realizar una denuncia?</h2>
-            <p className="text-blue-200">Ejerce tu derecho al control fiscal participativo.</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">¿Deseas realizar una denuncia?</h2>
+            <p className="text-blue-100 font-medium">Ejerce tu derecho al control fiscal participativo.</p>
           </div>
           <Link
             to="/contacto"
-            className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-blue-950 font-semibold px-8 py-3.5 rounded-lg transition-colors duration-200 shrink-0"
+            className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-lg font-bold px-8 py-3.5 rounded-lg transition-all duration-200 shrink-0 uppercase tracking-wide"
           >
             Atención Ciudadana
             <ArrowRight className="w-5 h-5" />
